@@ -445,41 +445,31 @@
         </div>
       </div>
 
+      <!-- Sub-page 2: Comic Viewer Canvas -->
       <div id="page-viewer" class="page">
         <div class="viewer-container">
           <div class="viewer-header">
             <h2 id="current-comic-title">Series Canvas</h2>
-            <p class="viewer-subtitle">Prologue: Celestial Awakening</p>
+            <p class="viewer-subtitle" id="current-chapter-title">
+              Loading Episode...
+            </p>
           </div>
-          <div class="comic-canvas">
-            <div class="webtoon-panel panel-1">
-              [ Heavenly Illustration Panel 1 ]
-            </div>
-            <div class="webtoon-panel panel-2">
-              [ Long-Scroll Narrative Panel 2 ]
-            </div>
-            <div class="webtoon-panel panel-3">
-              [ Epic Climactic Scene Panel 3 ]
-            </div>
+
+          <!-- The Core Scroll Track Engine -->
+          <div class="comic-canvas" id="comic-image-track">
+            <!-- JavaScript will dynamically inject seamless images here -->
           </div>
+
           <div class="viewer-nav">
             <button class="cta-btn" onclick="switchPage('home')">
               ← Back Home
             </button>
-            <!-- 2. Modified button with "disabled" attribute and unique ID style -->
             <button
               class="cta-btn"
               id="next-ep-btn"
-              disabled
-              style="
-                background: #e0e0e0;
-                color: #a0a0a0;
-                border-color: #d0d0d0;
-                cursor: not-allowed;
-                box-shadow: none;
-              "
+              onclick="loadNextEpisode()"
             >
-              Next Episode
+              Next Episode ▶
             </button>
           </div>
         </div>
@@ -598,9 +588,64 @@
       }
 
       // Action workflow when user interacts with a canvas comic entry
+      const chapterImagesDB = {
+        "Whispers of the Seraphim": [
+          "https://unsplash.com",
+          "https://unsplash.com",
+          "https://unsplash.com",
+        ],
+        "Sins of Crimson": ["https://unsplash.com", "https://unsplash.com"],
+        "The Alabaster Court": ["https://unsplash.com", "https://unsplash.com"],
+        "Under Scarlet Skies": ["https://unsplash.com"],
+        "Halo Breakdown": ["https://unsplash.com"],
+        "Ruby Shards": ["https://unsplash.com"],
+      };
+
+      // Global tracker variable for reading runtime state context
+      let currentViewingTitle = "";
+
+      // Action workflow when user interacts with a canvas comic entry
       function openComic(title) {
+        currentViewingTitle = title;
+
+        // 1. Update text displays inside headers
         document.getElementById("current-comic-title").innerText = title;
+        document.getElementById("current-chapter-title").innerText =
+          "Episode 1: The Gathering Storm";
+
+        // 2. Fetch the target target tracking div container element
+        const track = document.getElementById("comic-image-track");
+        track.innerHTML = ""; // Wipe clean any old read tracking content
+
+        // 3. Look up array values inside our mock database framework
+        const imageList = chapterImagesDB[title] || [];
+
+        if (imageList.length === 0) {
+          track.innerHTML =
+            "<p style='color:#fff; padding:40px; text-align:center;'>Comic panel artwork assets coming soon!</p>";
+        } else {
+          // 4. Loop and dynamically inject infinite responsive panel nodes seamlessly
+          imageList.forEach((url, index) => {
+            track.innerHTML += `<img src="${url}" alt="Panel ${index + 1}" class="webtoon-panel-img" loading="lazy">`;
+          });
+        }
+
+        // 5. Setup the bottom action workflow navigation buttons state rulesets
+        const nextBtn = document.getElementById("next-ep-btn");
+        nextBtn.disabled = false;
+        nextBtn.style = ""; // Clear out the hardcoded visual locking styles rules
+
+        // 6. Push routing engine into active target view pane viewport
         switchPage("viewer");
+      }
+
+      // Action runtime callback loop when user proceeds ahead to following sequential items
+      function loadNextEpisode() {
+        alert(
+          "You've reached the latest episode of " +
+            currentViewingTitle +
+            "! More episodes publishing next week!",
+        );
       }
 
       // Initialize application interface context variables on viewport render complete
