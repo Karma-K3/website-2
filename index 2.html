@@ -640,6 +640,119 @@
           <div class="comic-grid" id="subscribed-grid"></div>
         </div>
       </div>
+
+      <div id="page-game" class="page">
+        <div class="game-container">
+          <h2 class="section-title">Token Arcade Center</h2>
+          <p style="color: var(--text-muted)">
+            Play games, watch short sponsors, and stack up reading coins!
+          </p>
+
+          <div class="game-box">
+            <div class="game-status" id="arcade-level-display">
+              Current Stage: Level 1
+            </div>
+            <div class="game-canvas-mock">
+              <div style="font-size: 3.5rem; margin-bottom: 10px">👾</div>
+              <p id="game-prompt-text">
+                Tap the action button to secure the level goal!
+              </p>
+            </div>
+            <button
+              class="cta-btn"
+              onclick="simulateLevelClear()"
+              id="action-game-btn"
+            >
+              Complete Level Challenge
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-page 5: Anime & Manga Merch Store -->
+      <div id="page-store" class="page">
+        <div class="store-container">
+          <h2 class="section-title">The Treasure Store</h2>
+          <p style="color: var(--text-muted)">
+            Spend your hard-earned arcade coins here to get premium physical
+            anime merchandise!
+          </p>
+
+          <div class="store-grid">
+            <!-- Item 1 -->
+            <div class="product-card">
+              <div class="product-img-holder">🧸</div>
+              <div class="product-info">
+                <div class="product-title">Chibi Demon Chaser Plushie</div>
+                <div class="product-cost">
+                  <span class="coin-icon"></span> 150 Coins
+                </div>
+                <button
+                  class="cta-btn"
+                  style="width: 100%; margin-top: auto"
+                  onclick="redeemProduct('Chibi Demon Chaser Plushie', 150)"
+                >
+                  Redeem Package
+                </button>
+              </div>
+            </div>
+            <!-- Item 2 -->
+            <div class="product-card">
+              <div class="product-img-holder">🦊</div>
+              <div class="product-info">
+                <div class="product-title">Nine-Tails Fox Spirit Keychain</div>
+                <div class="product-cost">
+                  <span class="coin-icon"></span> 60 Coins
+                </div>
+                <button
+                  class="cta-btn"
+                  style="width: 100%; margin-top: auto"
+                  onclick="redeemProduct('Nine-Tails Fox Spirit Keychain', 60)"
+                >
+                  Redeem Package
+                </button>
+              </div>
+            </div>
+            <!-- Item 3 -->
+            <div class="product-card">
+              <div class="product-img-holder">🧣</div>
+              <div class="product-info">
+                <div class="product-title">Crimson Awakening Canvas Scarf</div>
+                <div class="product-cost">
+                  <span class="coin-icon"></span> 220 Coins
+                </div>
+                <button
+                  class="cta-btn"
+                  style="width: 100%; margin-top: auto"
+                  onclick="redeemProduct('Crimson Awakening Canvas Scarf', 220)"
+                >
+                  Redeem Package
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Direct Cash Support Coin Store -->
+          <div class="buy-options-bar">
+            <div>
+              <h3 style="color: var(--dark-red); margin-bottom: 4px">
+                Short on reading time?
+              </h3>
+              <p style="color: var(--text-muted); font-size: 0.9rem">
+                Skip the arcade completely and purchase a coin bundle instantly.
+              </p>
+            </div>
+            <div style="display: flex; gap: 10px">
+              <button class="cta-btn" onclick="buyCoinsDirect(50, 0.99)">
+                Buy 50 Coins ($0.99)
+              </button>
+              <button class="cta-btn" onclick="buyCoinsDirect(200, 2.99)">
+                Buy 200 Coins ($2.99)
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <footer>
