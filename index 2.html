@@ -375,23 +375,11 @@
         box-shadow: var(--halo-glow);
       }
 
-      .profile-tabs {
-        display: flex;
-        gap: 20px;
-        margin-bottom: 20px;
-        border-bottom: 1px solid #eee;
-      }
-
       .profile-tab {
         padding: 10px 20px;
         cursor: pointer;
         font-weight: 600;
         color: var(--text-muted);
-      }
-
-      .profile-tab.active {
-        color: var(--dark-red);
-        border-bottom: 2px solid var(--dark-red);
       }
 
       /* --- Footer --- */
@@ -406,18 +394,177 @@
         bottom: 0;
         width: 100%;
       }
+
+      .coin-display {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--light-rose);
+        border: 1px solid rgba(139, 0, 0, 0.15);
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-weight: 700;
+        color: var(--dark-red);
+        font-size: 0.9rem;
+        box-shadow: inset 0 1px 3px rgba(139, 0, 0, 0.05);
+      }
+
+      .coin-icon {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        background: #ffc107;
+        border-radius: 50%;
+        border: 1.5px solid #ff9800;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      /* --- Game Center Hub --- */
+      .game-container {
+        width: 100%;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .game-box {
+        background: var(--pure-white);
+        border-radius: 16px;
+        padding: 40px 20px;
+        box-shadow: var(--cloud-shadow);
+        border: 1px solid rgba(0, 0, 0, 0.03);
+        margin-top: 20px;
+      }
+
+      .game-canvas-mock {
+        width: 100%;
+        max-width: 450px;
+        height: 250px;
+        margin: 25px auto;
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        color: #ffffff;
+        border: 3px solid #0f3460;
+      }
+
+      .game-status {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 10px;
+        color: #e2b4bd;
+      }
+
+      /* --- Merchandise Marketplace --- */
+      .store-container {
+        width: 100%;
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      .store-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+      }
+
+      .product-card {
+        background: var(--pure-white);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--cloud-shadow);
+        border: 1px solid rgba(0, 0, 0, 0.02);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease;
+      }
+
+      .product-card:hover {
+        transform: translateY(-4px);
+      }
+
+      .product-img-holder {
+        width: 100%;
+        height: 180px;
+        background-color: var(--light-rose);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 3rem;
+      }
+
+      .product-info {
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+      }
+
+      .product-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 6px;
+      }
+
+      .product-cost {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--dark-red);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .buy-options-bar {
+        background: rgba(139, 0, 0, 0.03);
+        border-top: 1px solid rgba(139, 0, 0, 0.08);
+        padding: 20px;
+        border-radius: 12px;
+        margin-top: 40px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+      }
     </style>
   </head>
   <body>
     <header>
-      <div class="logo" onclick="switchPage('home')">
-        ASCENSION<span>TOON</span>
+      <div
+        class="logo-cluster"
+        onclick="switchPage('home')"
+        style="cursor: pointer"
+      >
+        <div class="logo-crest">A</div>
+        <div>
+          <h1>ASCENSION</h1>
+          <p>ORIGINALS PORTAL</p>
+        </div>
       </div>
-      <nav>
-        <a id="nav-home" class="active" onclick="switchPage('home')">Home</a>
-        <a id="nav-viewer" onclick="switchPage('viewer')">Reading Canvas</a>
-        <a id="nav-profile" onclick="switchPage('profile')">My Library</a>
+      <nav class="nav-links">
+        <button class="nav-item" onclick="switchPage('home')">Home</button>
+        <button class="nav-item" onclick="switchPage('game')">
+          🎮 Play Game
+        </button>
+        <button class="nav-item" onclick="switchPage('store')">🛍️ Store</button>
+        <button class="nav-item" onclick="switchPage('profile')">
+          My Library
+        </button>
       </nav>
+      <!-- Real-time Token Tracker Display Balance -->
+      <div class="coin-display">
+        <span class="coin-icon"></span>
+        <span id="global-coin-count">0</span> Coins
+      </div>
     </header>
 
     <main class="page-shell">
