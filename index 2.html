@@ -677,30 +677,133 @@
         </div>
       </div>
 
-      <div id="page-game" class="page">
-        <div class="game-container">
-          <h2 class="section-title">Token Arcade Center</h2>
-          <p style="color: var(--text-muted)">
-            Play games, watch short sponsors, and stack up reading coins!
+      <div id="page-game" class="page" style="display: none">
+        <div class="main-container">
+          <h1 class="portal-heading">Token Arcade Center</h1>
+          <p class="portal-subheading">
+            Shatter levels, view promotional breaks, and mint reading tokens.
           </p>
 
-          <div class="game-box">
+          <!-- THE CENTRAL GAMEPLAY FRAMEWAY VIEWPORT -->
+          <div
+            class="game-box"
+            id="active-game-viewport"
+            style="display: none; margin-bottom: 40px"
+          >
             <div class="game-status" id="arcade-level-display">
-              Current Stage: Level 1
+              Active Session: Loading Engine...
             </div>
-            <div class="game-canvas-mock">
-              <div style="font-size: 3.5rem; margin-bottom: 10px">👾</div>
-              <p id="game-prompt-text">
-                Tap the action button to secure the level goal!
-              </p>
-            </div>
-            <button
-              class="cta-btn"
-              onclick="simulateLevelClear()"
-              id="action-game-btn"
+
+            <!-- Dynamic Mounting Slot where game code gets executed -->
+            <div
+              id="game-engine-frame"
+              style="
+                width: 100%;
+                max-width: 450px;
+                min-height: 300px;
+                margin: 20px auto;
+                background: #111a2e;
+                border-radius: 12px;
+                border: 2px solid var(--accent-color);
+                overflow: hidden;
+                position: relative;
+              "
             >
-              Complete Level Challenge
+              <!-- Your loaded game code renders internally here -->
+            </div>
+
+            <button
+              class="cta-btn cta-btn-secondary"
+              onclick="closeActiveGame()"
+            >
+              ❌ Quit Session
             </button>
+          </div>
+
+          <!-- ARCADE SELECTION GRID (Your Menu of Games) -->
+          <h2
+            style="
+              color: var(--text-color);
+              margin-bottom: 20px;
+              font-size: 1.4rem;
+              border-left: 4px solid var(--accent-color);
+              padding-left: 10px;
+            "
+          >
+            Select an Arcade Challenge
+          </h2>
+          <div class="comic-grid" id="arcade-selection-menu">
+            <!-- GAME CARD 1 (Your Current Game) -->
+            <div class="comic-card">
+              <div
+                class="comic-cover"
+                style="
+                  position: relative;
+                  background: linear-gradient(135deg, #2b1015, #110507);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  overflow: hidden;
+                "
+              >
+                <!-- Place your thumbnail image source path URL below -->
+                <img
+                  src="YOUR_GAME_THUMBNAIL_URL_HERE.jpg"
+                  alt="Game Thumbnail"
+                  style="
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                  "
+                />
+
+                <!-- Decorative fallback text overlay if image fails to resolve -->
+                <span style="font-size: 3rem; z-index: 1">⚔️</span>
+              </div>
+              <div class="comic-info">
+                <h3 class="comic-title">Ascension Clicker</h3>
+                <p class="comic-author">Reward: 💰 15 Coins / Win</p>
+                <button
+                  class="cta-btn"
+                  style="width: 100%; margin-top: 10px; padding: 10px"
+                  onclick="launchArcadeEngine('clicker')"
+                >
+                  ▶ Play Now
+                </button>
+              </div>
+            </div>
+
+            <!-- GAME CARD 2 (Future Placeholder - Locked state style) -->
+            <div
+              class="comic-card"
+              style="opacity: 0.5; filter: grayscale(80%); cursor: not-allowed"
+            >
+              <div
+                class="comic-cover"
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  background: #151a22;
+                "
+              >
+                <span style="font-size: 3rem">🔒</span>
+              </div>
+              <div class="comic-info">
+                <h3 class="comic-title">Divine Scroll Dodge</h3>
+                <p class="comic-author">Coming Soon</p>
+                <button
+                  class="cta-btn cta-btn-secondary"
+                  style="width: 100%; margin-top: 10px; padding: 10px"
+                  disabled
+                >
+                  Locked
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
