@@ -68,23 +68,44 @@
         font-weight: 300;
       }
 
-      nav {
+      .nav-links {
         display: flex;
-        gap: 30px;
+        gap: 15px;
+        align-items: center;
       }
 
-      nav a {
-        text-decoration: none;
+      /* --- Professional Capsule Button Layout --- */
+      .nav-item {
+        background: transparent;
+        border: 1px solid transparent;
         color: var(--text-muted);
         font-weight: 600;
-        font-size: 15px;
-        transition: var(--transition-smooth);
-        position: relative;
-        padding: 5px 0;
+        font-size: 14px;
+        padding: 8px 16px;
+        border-radius: 20px;
         cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        align-items: center;
+        gap: 6px;
       }
 
-      nav a:hover,
+      /* --- Hover Interaction State --- */
+      .nav-item:hover {
+        color: var(--dark-red);
+        background-color: var(--light-rose);
+        border-color: rgba(139, 0, 0, 0.1);
+      }
+
+      /* --- Premium Active Selected State --- */
+      .nav-item.active {
+        color: var(--pure-white) !important;
+        background-color: var(--dark-red) !important;
+        border-color: var(--dark-red) !important;
+        box-shadow: 0 4px 12px rgba(139, 0, 0, 0.2);
+        transform: translateY(-1px);
+      }
+
       nav a.active {
         color: var(--dark-red);
       }
@@ -551,12 +572,24 @@
         </div>
       </div>
       <nav class="nav-links">
-        <button class="nav-item" onclick="switchPage('home')">Home</button>
-        <button class="nav-item" onclick="switchPage('game')">
+        <button
+          class="nav-item active"
+          id="nav-home"
+          onclick="switchPage('home')"
+        >
+          Home
+        </button>
+        <button class="nav-item" id="nav-game" onclick="switchPage('game')">
           🎮 Play Game
         </button>
-        <button class="nav-item" onclick="switchPage('store')">🛍️ Store</button>
-        <button class="nav-item" onclick="switchPage('profile')">
+        <button class="nav-item" id="nav-store" onclick="switchPage('store')">
+          🛍 Store
+        </button>
+        <button
+          class="nav-item"
+          id="nav-profile"
+          onclick="switchPage('profile')"
+        >
           My Library
         </button>
       </nav>
@@ -608,7 +641,10 @@
           </div>
 
           <div class="viewer-nav">
-            <button class="cta-btn" onclick="switchPage('home')">
+            <button
+              class="cta-btn cta-btn-secondary"
+              onclick="switchPage('home')"
+            >
               ← Back Home
             </button>
             <button
@@ -831,21 +867,31 @@
 
       // Single Page Routing System Engine
       function switchPage(pageId) {
-        // Remove active classes from all pages and navbar items
-        document
-          .querySelectorAll(".page")
-          .forEach((page) => page.classList.remove("active-page"));
-        document
-          .querySelectorAll("nav a")
-          .forEach((nav) => nav.classList.remove("active"));
+        // 1. Hide all application views
+        const pages = ["home", "viewer", "game", "store", "profile"];
+        pages.forEach((p) => {
+          const el = document.getElementById(`page-${p}`);
+          if (el) el.style.display = "none";
+        });
 
-        // Set specific requested views active
-        document.getElementById(`page-${pageId}`).classList.add("active-page");
+        // 2. Display the newly targeted interface page
+        const activePage = document.getElementById(`page-${pageId}`);
+        if (activePage) {
+          // Keeps flex layout clean for grid pages, defaults others to block
+          activePage.style.display = pageId === "home" ? "block" : "block";
+        }
 
-        const navElement = document.getElementById(`nav-${pageId}`);
-        if (navElement) navElement.classList.add("active");
+        // 3. Update the active pill navigation class highlights
+        document.querySelectorAll(".nav-item").forEach((btn) => {
+          btn.classList.remove("active");
+        });
 
-        // Scroll window layout back to top smoothly on sub-page swap
+        const activeNavButton = document.getElementById(`nav-${pageId}`);
+        if (activeNavButton) {
+          activeNavButton.classList.add("active");
+        }
+
+        // 4. Scroll smoothly to top of the view on page switch
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
@@ -912,8 +958,92 @@
 
       // Initialize application interface context variables on viewport render complete
       window.onload = function () {
-        generateComicGrids();
+        renderMainCatalog();
+        renderUserLibrary();
+        // Initialize our token profile data interface states
+        updateCoinInterface();
       };
+
+      // --- Banking Framework Core Local Storage Operations ---
+      let userCoins = parseInt(localStorage.getItem("app_user_coins")) || 0;
+      let currentArcadeLevel =
+        parseInt(localStorage.getItem("app_game_level")) || 1;
+
+      function updateCoinInterface() {
+        // Sync numerical values securely straight down into DOM elements
+        document.getElementById("global-coin-count").innerText = userCoins;
+
+        const lvlText = document.getElementById("arcade-level-display");
+        if (lvlText)
+          lvlText.innerText = "Current Stage: Level " + currentArcadeLevel;
+      }
+
+      // Arcade gameplay handler loop containing reward ad interstitials triggers
+      function simulateLevelClear() {
+        const actionBtn = document.getElementById("action-game-btn");
+        const promptText = document.getElementById("game-prompt-text");
+
+        actionBtn.disabled = true;
+        actionBtn.innerText = "Streaming Video Sponsor Ad Break...";
+        promptText.innerText =
+          "⏳ Loading interstitial video reward advertisement... Please enjoy this sponsor break to claim your tokens.";
+
+        // Simulating an ad network playing framework call countdown
+        setTimeout(() => {
+          // Grant coins to wallet cache
+          userCoins += 15;
+          currentArcadeLevel += 1;
+
+          // Save to browser vault memory
+          localStorage.setItem("app_user_coins", userCoins);
+          localStorage.setItem("app_game_level", currentArcadeLevel);
+
+          alert(
+            "🎉 Ad finished! You cleared the stage challenge successfully and secured +15 Golden Coins!",
+          );
+
+          // Reset interactive visual interface elements
+          actionBtn.disabled = false;
+          actionBtn.innerText = "Complete Level Challenge";
+          promptText.innerText =
+            "Tap the action button to secure the level goal!";
+
+          updateCoinInterface();
+        }, 3500); // 3.5-second ad mock loading break loop
+      }
+
+      // Premium direct invoice cash support coin bypass
+      function buyCoinsDirect(amount, cost) {
+        const confirmPayment = confirm(
+          `Proceed to checkout to purchase a bundle package of ${amount} Coins for $${cost}?`,
+        );
+        if (confirmPayment) {
+          userCoins += amount;
+          localStorage.setItem("app_user_coins", userCoins);
+          updateCoinInterface();
+          alert(
+            `🛒 Transaction processed! ${amount} Coins added straight into your profile vault.`,
+          );
+        }
+      }
+
+      // Merchandise store transaction handler
+      function redeemProduct(productName, coinCost) {
+        if (userCoins < coinCost) {
+          alert(
+            `❌ Insufficient Coins! You need ${coinCost} coins to redeem the ${productName}.\n\nGo head over to the Arcade section to stack up coins for free!`,
+          );
+          return;
+        }
+
+        userCoins -= coinCost;
+        localStorage.setItem("app_user_coins", userCoins);
+        updateCoinInterface();
+
+        alert(
+          `🎁 Success! You have redeemed the ${productName}!\n\nOur system has logged this order from your ad contributions revenue pot. Shipping details will be sent out soon.`,
+        );
+      }
     </script>
   </body>
 </html>
