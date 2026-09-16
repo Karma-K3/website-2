@@ -663,13 +663,17 @@
       function win() {
         locked = true;
 
-        // DISPATCH TO OUTSIDE VAULT ENGINE
-        const coinPayload = {
-          action: "AWARD_ARCADE_TOKENS",
-          amount: 15, // Payout tier matching matching rules
-        };
+        // 🪙 REWARD BRIDGE — unified contract (handled by index 2.html)
         if (window.parent && window.parent !== window) {
-          window.parent.postMessage(coinPayload, "*");
+          window.parent.postMessage(
+            {
+              source: "ascension-arcade",
+              action: "AWARD_COINS",
+              amount: 15,
+              gameId: "matching",
+            },
+            "*",
+          );
         }
 
         if (level === levels.length - 1) {

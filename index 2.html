@@ -715,7 +715,11 @@
                 position: relative;
               "
             >
-              <!-- Your loaded game code renders internally here -->
+              <iframe
+                id="game-frame"
+                src=""
+                style="width: 100%; height: 100%; border: none; display: block"
+              ></iframe>
             </div>
 
             <button
@@ -907,33 +911,59 @@
     </footer>
 
     <script>
-      function launchArcadeEngine(gameUrl) {
-        const container = document.getElementById("arcade-container");
-        const iframe = document.getElementById("arcade-iframe");
+      const GAME_FILES = {
+        clicker: "game1.html",
+        matching: "game2.html",
+      };
 
-        if (!container || !iframe) {
-          console.error("Arcade container or iframe element not found.");
+      function launchArcadeEngine(gameKey) {
+        // Map short keys → actual file URLs
+        const GAMES = {
+          clicker: { file: "game1.html", reward: 15 },
+          matching: { file: "game2.html", reward: 15 },
+        };
+
+        const game = GAMES[gameKey];
+        if (!game) {
+          console.error("Unknown game key:", gameKey);
           return;
         }
 
-        // Dynamically adjust viewport width based on the active game
-        if (gameUrl.includes("game2.html")) {
-          container.style.maxWidth = "1000px"; // Widescreen space for game2
-          container.classList.add("widescreen-mode");
-        } else {
-          container.style.maxWidth = "600px"; // Default/standard width for other games (like clicker)
-          container.classList.remove("widescreen-mode");
+        const viewport = document.getElementById("active-game-viewport");
+        const frame = document.getElementById("game-engine-frame");
+        const levelDisplay = document.getElementById("arcade-level-display");
+
+        if (!viewport || !frame) {
+          console.error("Arcade viewport missing from DOM.");
+          return;
         }
 
-        // Set the source and reveal the engine container
-        iframe.src = gameUrl;
-        container.style.display = "block";
+        // Widescreen for the matching game, standard for clicker
+        if (gameKey === "matching") {
+          frame.style.maxWidth = "1000px";
+        } else {
+          frame.style.maxWidth = "450px";
+        }
+
+        if (levelDisplay) {
+          levelDisplay.textContent = `Now Playing: ${gameKey} · Reward: ${game.reward} coins`;
+        }
+
+        frame.innerHTML = `<iframe
+    src="${game.file}"
+    style="width:100%; min-height:620px; border:0; display:block; background:#050309;"
+    title="${gameKey} game"
+  ></iframe>`;
+
+        viewport.style.display = "block";
+        viewport.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
       function closeActiveGame() {
-        // Gracefully clean up threads and collapse structural view windows
-        document.getElementById("active-game-viewport").style.display = "none";
-        document.getElementById("game-engine-frame").innerHTML = "";
+        const viewport = document.getElementById("active-game-viewport");
+        const frame = document.getElementById("game-engine-frame");
+        if (frame) frame.innerHTML = "";
+        if (viewport) viewport.style.display = "none";
       }
 
       // Sample mock database arrays for webtoon items
@@ -1101,150 +1131,147 @@
         updateCoinInterface();
       };
 
-      // --- Banking Framework Core Local Storage Operations ---
-      let userCoins = parseInt(localStorage.getItem("app_user_coins")) || 0;
-      let currentArcadeLevel =
-        parseInt(localStorage.getItem("app_game_level")) || 1;
+      /* ==============================================================
+   ASCENSION VAULT — UNIFIED COIN ENGINE
+   Single storage key · single variable · single listener
+   ============================================================== */
 
-      function updateCoinInterface() {
-        // Sync numerical values securely straight down into DOM elements
-        document.getElementById("global-coin-count").innerText = userCoins;
+      const VAULT_KEY = "ascension_vault";
 
-        const lvlText = document.getElementById("arcade-level-display");
-        if (lvlText)
-          lvlText.innerText = "Current Stage: Level " + currentArcadeLevel;
-      }
-
-      // Arcade gameplay handler loop containing reward ad interstitials triggers
-      function simulateLevelClear() {
-        const actionBtn = document.getElementById("action-game-btn");
-        const promptText = document.getElementById("game-prompt-text");
-
-        actionBtn.disabled = true;
-        actionBtn.innerText = "Streaming Video Sponsor Ad Break...";
-        promptText.innerText =
-          "⏳ Loading interstitial video reward advertisement... Please enjoy this sponsor break to claim your tokens.";
-
-        // Simulating an ad network playing framework call countdown
-        setTimeout(() => {
-          // Grant coins to wallet cache
-          userCoins += 15;
-          currentArcadeLevel += 1;
-
-          // Save to browser vault memory
-          localStorage.setItem("app_user_coins", userCoins);
-          localStorage.setItem("app_game_level", currentArcadeLevel);
-
-          alert(
-            "🎉 Ad finished! You cleared the stage challenge successfully and secured +15 Golden Coins!",
-          );
-
-          // Reset interactive visual interface elements
-          actionBtn.disabled = false;
-          actionBtn.innerText = "Complete Level Challenge";
-          promptText.innerText =
-            "Tap the action button to secure the level goal!";
-
-          updateCoinInterface();
-        }, 3500); // 3.5-second ad mock loading break loop
-      }
-
-      // Premium direct invoice cash support coin bypass
-      function buyCoinsDirect(amount, cost) {
-        const confirmPayment = confirm(
-          `Proceed to checkout to purchase a bundle package of ${amount} Coins for $${cost}?`,
-        );
-        if (confirmPayment) {
-          userCoins += amount;
-          localStorage.setItem("app_user_coins", userCoins);
-          updateCoinInterface();
-          alert(
-            `🛒 Transaction processed! ${amount} Coins added straight into your profile vault.`,
-          );
+      const Vault = (() => {
+        function load() {
+          try {
+            const raw = localStorage.getItem(VAULT_KEY);
+            if (raw) return JSON.parse(raw);
+          } catch (e) {
+            /* corrupted → reset below */
+          }
+          const fresh = {
+            coins: 0,
+            totalEarned: 0,
+            totalSpent: 0,
+            arcadeLevel: 1,
+            lastReward: {}, // { gameId: timestampMs }
+          };
+          localStorage.setItem(VAULT_KEY, JSON.stringify(fresh));
+          return fresh;
         }
-      }
 
-      // Merchandise store transaction handler
-      function redeemProduct(productName, coinCost) {
-        if (userCoins < coinCost) {
-          alert(
-            `❌ Insufficient Coins! You need ${coinCost} coins to redeem the ${productName}.\n\nGo head over to the Arcade section to stack up coins for free!`,
-          );
+        function save(state) {
+          localStorage.setItem(VAULT_KEY, JSON.stringify(state));
+          renderVault();
+        }
+
+        function renderVault() {
+          const s = load();
+          const el = document.getElementById("global-coin-count");
+          if (el) el.textContent = s.coins;
+
+          const lvlEl = document.getElementById("arcade-level-display");
+          if (lvlEl)
+            lvlEl.textContent = "Current Stage: Level " + s.arcadeLevel;
+        }
+
+        function add(amount) {
+          const s = load();
+          s.coins += amount;
+          s.totalEarned += amount;
+          save(s);
+          return s.coins;
+        }
+
+        function spend(amount) {
+          const s = load();
+          if (s.coins < amount) return { ok: false, balance: s.coins };
+          s.coins -= amount;
+          s.totalSpent += amount;
+          save(s);
+          return { ok: true, balance: s.coins };
+        }
+
+        function canReward(gameId, cooldownMs = 60000) {
+          const s = load();
+          const last = s.lastReward[gameId] || 0;
+          return Date.now() - last >= cooldownMs;
+        }
+
+        function markRewarded(gameId) {
+          const s = load();
+          s.lastReward[gameId] = Date.now();
+          save(s);
+        }
+
+        function bumpArcadeLevel() {
+          const s = load();
+          s.arcadeLevel += 1;
+          save(s);
+        }
+
+        return {
+          load,
+          add,
+          spend,
+          canReward,
+          markRewarded,
+          bumpArcadeLevel,
+          render: renderVault,
+        };
+      })();
+
+      /* Expose to onclick handlers in the HTML (buyCoinsDirect, redeemProduct) */
+      window.Vault = Vault;
+
+      /* --- Unified arcade message receiver --- */
+      window.addEventListener("message", function (event) {
+        if (!event.data || typeof event.data !== "object") return;
+        if (event.data.source !== "ascension-arcade") return;
+        if (event.data.action !== "AWARD_COINS") return;
+
+        const gameId = event.data.gameId || "unknown";
+        const amount = parseInt(event.data.amount, 10) || 0;
+        if (amount <= 0) return;
+
+        // Reward cooldown — prevents infinite grinding
+        if (!Vault.canReward(gameId, 60000)) {
+          console.log(`[Vault] ${gameId}: reward on cooldown, skipping.`);
           return;
         }
 
-        userCoins -= coinCost;
-        localStorage.setItem("app_user_coins", userCoins);
-        updateCoinInterface();
+        Vault.markRewarded(gameId);
+        const newBalance = Vault.add(amount);
+        Vault.bumpArcadeLevel();
 
+        console.log(
+          `[Vault] +${amount} coins from ${gameId}. Balance: ${newBalance}`,
+        );
+      });
+
+      /* --- Store / cash handlers now use Vault --- */
+      function buyCoinsDirect(amount, cost) {
+        const ok = confirm(
+          `Proceed to checkout for ${amount} Coins ($${cost})?`,
+        );
+        if (!ok) return;
+        Vault.add(amount);
+        alert(`🛒 Transaction complete. ${amount} Coins added to your vault.`);
+      }
+
+      function redeemProduct(productName, coinCost) {
+        const s = Vault.load();
+        if (s.coins < coinCost) {
+          alert(
+            `❌ Insufficient Coins. You need ${coinCost}, you have ${s.coins}.\n\nPlay the arcade to earn more!`,
+          );
+          return;
+        }
+        Vault.spend(coinCost);
         alert(
-          `🎁 Success! You have redeemed the ${productName}!\n\nOur system has logged this order from your ad contributions revenue pot. Shipping details will be sent out soon.`,
+          `🎁 Success! You redeemed the ${productName}.\nShipping details will be sent shortly.`,
         );
       }
-      // ==============================================================
-      // 🔊 COIN MONETIZATION LISTENER (Bridges game1.html to Vault)
-      // ==============================================================
-      window.addEventListener("message", function (event) {
-        // Check if the coming message is a verified arcade level clear
-        if (event.data && event.data.type === "ARCADE_WIN_REWARD") {
-          // 1. Process and append the earned coins to the global pool variable
-          userCoins += event.data.coins;
 
-          // 2. Commit the values immediately into browser storage memory
-          localStorage.setItem("app_user_coins", userCoins);
-
-          // 3. Force the layout counter system elements to update instantly
-          updateCoinInterface();
-
-          // 4. Send an interactive toast or log to confirm the transmission
-          console.log(
-            `Successfully received ${event.data.coins} Coins from the game engine portal.`,
-          );
-        }
-      });
-
-      // Initialize Wallet Balance from localized browser storage or default to 0
-      let currentCoins =
-        parseInt(localStorage.getItem("global_ascension_vault")) || 0;
-
-      // Function to safely update the UI text and save the balance state
-      function updateWalletUI(amount) {
-        currentCoins += amount;
-        localStorage.setItem("global_ascension_vault", currentCoins);
-
-        // Update the layout visual counter element
-        const visualCounter = document.getElementById("global-coin-count");
-        if (visualCounter) {
-          visualCounter.innerText = currentCoins;
-        }
-      }
-
-      // Fire once on initial index window boot sequence to display existing coins
-      document.addEventListener("DOMContentLoaded", () => {
-        const visualCounter = document.getElementById("global-coin-count");
-        if (visualCounter) visualCounter.innerText = currentCoins;
-      });
-
-      // THE CROSS-DOCUMENT MESSAGE LISTENER ENGINE (The Receiver)
-      window.addEventListener("message", function (event) {
-        // Basic verification check for message payload structure integrity
-        if (!event.data || typeof event.data !== "object") return;
-
-        // Check if the payload matches our verified action token signature
-        if (event.data.action === "AWARD_ARCADE_TOKENS") {
-          const rewardAmount = parseInt(event.data.amount) || 0;
-
-          if (rewardAmount > 0) {
-            // Commit token transaction to system ledger
-            updateWalletUI(rewardAmount);
-
-            // Log confirmation to browser console for development debugging
-            console.log(
-              `[Arcade Engine Vault] Successfully minted +${rewardAmount} Coins.`,
-            );
-          }
-        }
-      });
+      /* --- Initial paint --- */
+      document.addEventListener("DOMContentLoaded", Vault.render);
     </script>
   </body>
 </html>
