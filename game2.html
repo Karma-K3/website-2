@@ -662,11 +662,21 @@
       }
       function win() {
         locked = true;
+
+        // DISPATCH TO OUTSIDE VAULT ENGINE
+        const coinPayload = {
+          action: "AWARD_ARCADE_TOKENS",
+          amount: 15, // Payout tier matching matching rules
+        };
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(coinPayload, "*");
+        }
+
         if (level === levels.length - 1) {
           setModal(
             "🏆",
             "Archive mastered",
-            "Every relic is yours. Your legend is written in mana.",
+            "Every relic is yours. Your legend is written in mana and 15 coins have been credited to your wallet!",
             "Play from the beginning",
             () => {
               level = 0;
@@ -679,7 +689,7 @@
           setModal(
             "✦",
             "Archive cleared!",
-            `Your memory has earned a passage to ${levels[level].name}.`,
+            `Your memory has earned a passage to ${levels[level].name} and added 15 coins to your wallet.`,
             "Enter next level",
             makeBoard,
           );

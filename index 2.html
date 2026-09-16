@@ -556,6 +556,12 @@
         align-items: center;
         gap: 15px;
       }
+
+      #arcade-container {
+        transition: max-width 0.3s ease-in-out;
+        width: 100%;
+        margin: 0 auto;
+      }
     </style>
   </head>
   <body>
@@ -901,31 +907,27 @@
     </footer>
 
     <script>
-      function launchArcadeEngine(gameKey) {
-        const viewportPanel = document.getElementById("active-game-viewport");
-        const containerSlot = document.getElementById("game-engine-frame");
-        const sessionLabel = document.getElementById("arcade-level-display");
+      function launchArcadeEngine(gameUrl) {
+        const container = document.getElementById("arcade-container");
+        const iframe = document.getElementById("arcade-iframe");
 
-        // 1. Smoothly display the gameplay arena view
-        viewportPanel.style.display = "block";
-        viewportPanel.scrollIntoView({ behavior: "smooth", block: "center" });
-
-        // 2. Clear out any previous broken canvas remnants
-        containerSlot.innerHTML = "";
-
-        // 3. Mount the game via a clean, sandboxed iframe
-        if (gameKey === "clicker") {
-          sessionLabel.innerText = "Active Session: Ascension Clicker v1.0";
-
-          // UPGRADED: Expanded dimensions to fully show the cultivation trial interface
-          containerSlot.innerHTML = `
-            <iframe 
-                src="game1.html" 
-                style="width: 100%; min-height: 620px; border: none; overflow: hidden; background: #0a0714; display: block;"
-                scrolling="no">
-            </iframe>
-        `;
+        if (!container || !iframe) {
+          console.error("Arcade container or iframe element not found.");
+          return;
         }
+
+        // Dynamically adjust viewport width based on the active game
+        if (gameUrl.includes("game2.html")) {
+          container.style.maxWidth = "1000px"; // Widescreen space for game2
+          container.classList.add("widescreen-mode");
+        } else {
+          container.style.maxWidth = "600px"; // Default/standard width for other games (like clicker)
+          container.classList.remove("widescreen-mode");
+        }
+
+        // Set the source and reveal the engine container
+        iframe.src = gameUrl;
+        container.style.display = "block";
       }
 
       function closeActiveGame() {
@@ -1198,6 +1200,49 @@
           console.log(
             `Successfully received ${event.data.coins} Coins from the game engine portal.`,
           );
+        }
+      });
+
+      // Initialize Wallet Balance from localized browser storage or default to 0
+      let currentCoins =
+        parseInt(localStorage.getItem("global_ascension_vault")) || 0;
+
+      // Function to safely update the UI text and save the balance state
+      function updateWalletUI(amount) {
+        currentCoins += amount;
+        localStorage.setItem("global_ascension_vault", currentCoins);
+
+        // Update the layout visual counter element
+        const visualCounter = document.getElementById("global-coin-count");
+        if (visualCounter) {
+          visualCounter.innerText = currentCoins;
+        }
+      }
+
+      // Fire once on initial index window boot sequence to display existing coins
+      document.addEventListener("DOMContentLoaded", () => {
+        const visualCounter = document.getElementById("global-coin-count");
+        if (visualCounter) visualCounter.innerText = currentCoins;
+      });
+
+      // THE CROSS-DOCUMENT MESSAGE LISTENER ENGINE (The Receiver)
+      window.addEventListener("message", function (event) {
+        // Basic verification check for message payload structure integrity
+        if (!event.data || typeof event.data !== "object") return;
+
+        // Check if the payload matches our verified action token signature
+        if (event.data.action === "AWARD_ARCADE_TOKENS") {
+          const rewardAmount = parseInt(event.data.amount) || 0;
+
+          if (rewardAmount > 0) {
+            // Commit token transaction to system ledger
+            updateWalletUI(rewardAmount);
+
+            // Log confirmation to browser console for development debugging
+            console.log(
+              `[Arcade Engine Vault] Successfully minted +${rewardAmount} Coins.`,
+            );
+          }
         }
       });
     </script>

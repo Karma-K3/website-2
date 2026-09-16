@@ -1392,5 +1392,33 @@
         configurePanelForLevel();
       })();
     </script>
+    <script>
+      (function () {
+        // Keep checking if the win overlay panel appears on screen
+        const rewardCheckInterval = setInterval(() => {
+          const overlay = document.getElementById("overlay");
+          if (overlay && overlay.classList.contains("show")) {
+            const panel = overlay.querySelector(".panel");
+            // If the panel has changed state to a win screen, dispatch rewards
+            if (
+              panel &&
+              panel.classList.contains("win") &&
+              !panel.dataset.rewardSent
+            ) {
+              panel.dataset.rewardSent = "true"; // Prevent double-triggering
+
+              const payload = {
+                action: "AWARD_ARCADE_TOKENS",
+                amount: 15,
+              };
+
+              if (window.parent && window.parent !== window) {
+                window.parent.postMessage(payload, "*");
+              }
+            }
+          }
+        }, 500);
+      })();
+    </script>
   </body>
 </html>
