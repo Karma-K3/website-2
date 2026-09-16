@@ -562,6 +562,48 @@
         width: 100%;
         margin: 0 auto;
       }
+
+      /* --- Paywall overlay for locked chapters --- */
+      .paywall-box {
+        background: #000;
+        padding: 60px 20px;
+        display: flex;
+        justify-content: center;
+      }
+      .paywall-inner {
+        background: var(--pure-white);
+        border: 1px solid rgba(139, 0, 0, 0.15);
+        border-radius: 20px;
+        padding: 40px 30px;
+        max-width: 420px;
+        text-align: center;
+        box-shadow: var(--cloud-shadow);
+      }
+      .paywall-lock {
+        font-size: 3rem;
+        margin-bottom: 12px;
+      }
+      .paywall-inner h3 {
+        font-size: 1.3rem;
+        color: var(--dark-red);
+        margin-bottom: 10px;
+      }
+      .paywall-inner p {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+      .paywall-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .paywall-balance {
+        margin-top: 18px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+      }
     </style>
   </head>
   <body>
@@ -910,6 +952,7 @@
       </p>
     </footer>
 
+    <script src="comics.js"></script>
     <script>
       const GAME_FILES = {
         clicker: "game1.html",
@@ -966,72 +1009,6 @@
         if (viewport) viewport.style.display = "none";
       }
 
-      // Sample mock database arrays for webtoon items
-      const comicsData = [
-        {
-          title: "Sins of Crimson",
-          author: "H.V. Aura",
-          image: "linear-gradient(45deg, #ffe6e6, #ffb3b3)",
-        },
-        {
-          title: "The Alabaster Court",
-          author: "Luna Cross",
-          image: "linear-gradient(45deg, #ffffff, #d9f2ff)",
-        },
-        {
-          title: "Under Scarlet Skies",
-          author: "K. R. Thorne",
-          image: "linear-gradient(45deg, #ffb3b3, #ff6666)",
-        },
-        {
-          title: "Halo Breakdown",
-          author: "V. Gabriel",
-          image: "linear-gradient(45deg, #e6ffe6, #ffffff)",
-        },
-        {
-          title: "Ruby Shards",
-          author: "Ember Gray",
-          image: "linear-gradient(45deg, #ffccd5, #ffb3b3)",
-        },
-      ];
-
-      // Handles loading database objects into view structural models asynchronously
-      function generateComicGrids() {
-        const trendingGrid = document.getElementById("trending-grid");
-        const subscribedGrid = document.getElementById("subscribed-grid");
-
-        trendingGrid.innerHTML = "";
-        subscribedGrid.innerHTML = "";
-
-        comicsData.forEach((comic) => {
-          const cardHtml = `
-                    <div class="comic-card" onclick="openComic('${comic.title}')">
-                        <div class="comic-thumb" style="background: ${comic.image}"></div>
-                        <div class="comic-info">
-                            <div class="comic-title">${comic.title}</div>
-                            <div class="comic-author">By ${comic.author}</div>
-                        </div>
-                    </div>
-                `;
-          trendingGrid.innerHTML += cardHtml;
-        });
-
-        // Populate some mock entries in user library page
-        for (let i = 0; i < 3; i++) {
-          const comic = comicsData[i];
-          const cardHtml = `
-                    <div class="comic-card" onclick="openComic('${comic.title}')">
-                        <div class="comic-thumb" style="background: ${comic.image}"></div>
-                        <div class="comic-info">
-                            <div class="comic-title">${comic.title}</div>
-                            <div class="comic-author">Ch. 24 Read</div>
-                        </div>
-                    </div>
-                `;
-          subscribedGrid.innerHTML += cardHtml;
-        }
-      }
-
       // Single Page Routing System Engine
       function switchPage(pageId) {
         // 1. Hide all application views
@@ -1062,74 +1039,220 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
-      // Action workflow when user interacts with a canvas comic entry
-      const chapterImagesDB = {
-        "Whispers of the Seraphim": [
-          "https://unsplash.com",
-          "https://unsplash.com",
-          "https://unsplash.com",
-        ],
-        "Sins of Crimson": ["https://unsplash.com", "https://unsplash.com"],
-        "The Alabaster Court": ["https://unsplash.com", "https://unsplash.com"],
-        "Under Scarlet Skies": ["https://unsplash.com"],
-        "Halo Breakdown": ["https://unsplash.com"],
-        "Ruby Shards": ["https://unsplash.com"],
-      };
+      /* ==============================================================
+   COMIC CATALOG RENDERERS (read from comics.js)
+   ============================================================== */
 
-      // Global tracker variable for reading runtime state context
-      let currentViewingTitle = "";
+      function renderTrendingGrid() {
+        const grid = document.getElementById("trending-grid");
+        if (!grid) return;
+        grid.innerHTML = "";
 
-      // Action workflow when user interacts with a canvas comic entry
-      function openComic(title) {
-        currentViewingTitle = title;
+        COMICS.forEach((comic) => {
+          const card = document.createElement("div");
+          card.className = "comic-card";
+          card.onclick = () => openComic(comic.slug);
 
-        // 1. Update text displays inside headers
-        document.getElementById("current-comic-title").innerText = title;
-        document.getElementById("current-chapter-title").innerText =
-          "Episode 1: The Gathering Storm";
+          const thumbStyle = comic.cover
+            ? `background-image: url('${comic.cover}'); background-size: cover; background-position: center;`
+            : `background: ${comic.coverTint || "linear-gradient(45deg, #eee, #ddd)"};`;
 
-        // 2. Fetch the target target tracking div container element
-        const track = document.getElementById("comic-image-track");
-        track.innerHTML = ""; // Wipe clean any old read tracking content
+          card.innerHTML = `
+      <div class="comic-thumb" style="${thumbStyle}"></div>
+      <div class="comic-info">
+        <div class="comic-title">${comic.title}</div>
+        <div class="comic-author">By ${comic.author}</div>
+      </div>
+    `;
+          grid.appendChild(card);
+        });
+      }
 
-        // 3. Look up array values inside our mock database framework
-        const imageList = chapterImagesDB[title] || [];
+      function renderSubscribedGrid() {
+        const grid = document.getElementById("subscribed-grid");
+        if (!grid) return;
+        grid.innerHTML = "";
 
-        if (imageList.length === 0) {
-          track.innerHTML =
-            "<p style='color:#fff; padding:40px; text-align:center;'>Comic panel artwork assets coming soon!</p>";
-        } else {
-          // 4. Loop and dynamically inject infinite responsive panel nodes seamlessly
-          imageList.forEach((url, index) => {
-            track.innerHTML += `<img src="${url}" alt="Panel ${index + 1}" class="webtoon-panel-img" loading="lazy">`;
-          });
+        // For now: show first 3 comics as "in library"
+        COMICS.slice(0, 3).forEach((comic) => {
+          const card = document.createElement("div");
+          card.className = "comic-card";
+          card.onclick = () => openComic(comic.slug);
+
+          const thumbStyle = comic.cover
+            ? `background-image: url('${comic.cover}'); background-size: cover; background-position: center;`
+            : `background: ${comic.coverTint || "linear-gradient(45deg, #eee, #ddd)"};`;
+
+          card.innerHTML = `
+      <div class="comic-thumb" style="${thumbStyle}"></div>
+      <div class="comic-info">
+        <div class="comic-title">${comic.title}</div>
+        <div class="comic-author">Ch. ${comic.chapters[0]?.number ?? 1} available</div>
+      </div>
+    `;
+          grid.appendChild(card);
+        });
+      }
+
+      /* ==============================================================
+   COMIC READER — vertical scroll + paywall
+   ============================================================== */
+
+      let currentComicSlug = null;
+      let currentChapterNumber = 1;
+
+      const UNLOCK_COST = 20; // coins per locked chapter
+
+      function openComic(slugOrTitle, chapterNumber = 1) {
+        // Accept legacy title strings too (in case a hero button passes title)
+        let comic = getComic(slugOrTitle);
+        if (!comic) {
+          // Try to match by title
+          comic = COMICS.find((c) => c.title === slugOrTitle);
+        }
+        if (!comic) {
+          alert("Comic not found.");
+          return;
         }
 
-        // 5. Setup the bottom action workflow navigation buttons state rulesets
+        currentComicSlug = comic.slug;
+        currentChapterNumber = chapterNumber;
+
+        const chapter = getChapter(comic.slug, chapterNumber);
+        if (!chapter) {
+          alert("Chapter not found.");
+          return;
+        }
+
+        // Update headers
+        document.getElementById("current-comic-title").innerText = comic.title;
+        document.getElementById("current-chapter-title").innerText =
+          `Episode ${chapter.number}: ${chapter.title}`;
+
+        // Decide access
+        const free = isChapterFree(comic.slug, chapter.number);
+        const track = document.getElementById("comic-image-track");
+        track.innerHTML = "";
+
+        if (!free) {
+          // Render paywall overlay instead of panels
+          renderPaywall(track, comic, chapter);
+        } else {
+          renderPanels(track, chapter);
+        }
+
+        // Wire navigation buttons
         const nextBtn = document.getElementById("next-ep-btn");
         nextBtn.disabled = false;
-        nextBtn.style = ""; // Clear out the hardcoded visual locking styles rules
+        nextBtn.onclick = () => gotoChapter(comic.slug, chapter.number + 1);
 
-        // 6. Push routing engine into active target view pane viewport
         switchPage("viewer");
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
-      // Action runtime callback loop when user proceeds ahead to following sequential items
-      function loadNextEpisode() {
-        alert(
-          "You've reached the latest episode of " +
-            currentViewingTitle +
-            "! More episodes publishing next week!",
+      function renderPanels(track, chapter) {
+        if (!chapter.panels || chapter.panels.length === 0) {
+          track.innerHTML =
+            "<p style='color:#fff; padding:40px; text-align:center;'>Panel artwork coming soon.</p>";
+          return;
+        }
+        chapter.panels.forEach((url, i) => {
+          const img = document.createElement("img");
+          img.src = url;
+          img.alt = `Panel ${i + 1}`;
+          img.className = "webtoon-panel-img";
+          img.loading = "lazy";
+          img.onerror = () => {
+            img.src = `https://placehold.co/800x1200/1a1a2e/eaeaf2?text=Panel+${i + 1}+broken`;
+          };
+          track.appendChild(img);
+        });
+      }
+
+      function renderPaywall(track, comic, chapter) {
+        const box = document.createElement("div");
+        box.className = "paywall-box";
+        box.innerHTML = `
+    <div class="paywall-inner">
+      <div class="paywall-lock">🔒</div>
+      <h3>Chapter ${chapter.number} is locked</h3>
+      <p>The first ${comic.freeChapters ?? 5} chapters are free. Unlock <em>${chapter.title}</em> for <strong>${UNLOCK_COST} Golden Coins</strong>.</p>
+      <div class="paywall-actions">
+        <button class="cta-btn" id="unlock-btn">Unlock for ${UNLOCK_COST} Coins</button>
+        <button class="cta-btn" id="arcade-btn" style="background:transparent; border:1px solid rgba(139,0,0,.35); color:var(--dark-red);">Earn Coins in Arcade</button>
+      </div>
+      <p class="paywall-balance">Your balance: <strong>${Vault.load().coins}</strong> coins</p>
+    </div>
+  `;
+        track.appendChild(box);
+
+        document.getElementById("unlock-btn").onclick = () => {
+          const result = Vault.spend(UNLOCK_COST);
+          if (!result.ok) {
+            alert(
+              `You need ${UNLOCK_COST} coins but only have ${result.balance}. Play the arcade to earn more!`,
+            );
+            return;
+          }
+          // Grant access — for now, remember in localStorage
+          const unlocked = JSON.parse(
+            localStorage.getItem("ascension_unlocked") || "{}",
+          );
+          if (!unlocked[comic.slug]) unlocked[comic.slug] = [];
+          if (!unlocked[comic.slug].includes(chapter.number)) {
+            unlocked[comic.slug].push(chapter.number);
+            localStorage.setItem(
+              "ascension_unlocked",
+              JSON.stringify(unlocked),
+            );
+          }
+          // Re-render this chapter as unlocked
+          openComic(comic.slug, chapter.number);
+        };
+
+        document.getElementById("arcade-btn").onclick = () =>
+          switchPage("game");
+      }
+
+      /* Override isChapterFree to also honor unlocked chapters */
+      const _originalIsFree = isChapterFree;
+      window.isChapterFree = function (slug, number) {
+        if (_originalIsFree(slug, number)) return true;
+        const unlocked = JSON.parse(
+          localStorage.getItem("ascension_unlocked") || "{}",
         );
+        return (unlocked[slug] || []).includes(number);
+      };
+      // Re-bind the global so openComic uses the wrapper
+      isChapterFree = window.isChapterFree;
+
+      function gotoChapter(slug, number) {
+        const comic = getComic(slug);
+        if (!comic) return;
+        const max = Math.max(...comic.chapters.map((c) => c.number));
+        if (number > max) {
+          alert(
+            `You've reached the latest episode of ${comic.title}! More coming soon.`,
+          );
+          return;
+        }
+        openComic(slug, number);
       }
 
-      // Initialize application interface context variables on viewport render complete
-      window.onload = function () {
-        renderMainCatalog();
-        renderUserLibrary();
-        // Initialize our token profile data interface states
-        updateCoinInterface();
-      };
+      function loadNextEpisode() {
+        if (currentComicSlug) {
+          gotoChapter(currentComicSlug, currentChapterNumber + 1);
+        }
+      }
+
+      /* ==============================================================
+   INITIAL PAINT — replaces the broken window.onload
+   ============================================================== */
+      document.addEventListener("DOMContentLoaded", () => {
+        renderTrendingGrid();
+        renderSubscribedGrid();
+        Vault.render();
+      });
 
       /* ==============================================================
    ASCENSION VAULT — UNIFIED COIN ENGINE
