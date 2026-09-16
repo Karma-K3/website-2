@@ -663,41 +663,55 @@
       function win() {
         locked = true;
 
-        // 🪙 REWARD BRIDGE — unified contract (handled by index 2.html)
-        if (window.parent && window.parent !== window) {
-          window.parent.postMessage(
-            {
-              source: "ascension-arcade",
-              action: "AWARD_COINS",
-              amount: 15,
-              gameId: "matching",
-            },
-            "*",
-          );
-        }
+        // Build the "claim reward" flow via modal button
+        const isFinalLevel = level === levels.length - 1;
+        const nextLevelName = isFinalLevel ? null : levels[level + 1].name;
 
-        if (level === levels.length - 1) {
-          setModal(
-            "🏆",
-            "Archive mastered",
-            "Every relic is yours. Your legend is written in mana and 15 coins have been credited to your wallet!",
-            "Play from the beginning",
-            () => {
-              level = 0;
-              lives = 3;
-              makeBoard();
-            },
-          );
-        } else {
-          level++;
-          setModal(
-            "✦",
-            "Archive cleared!",
-            `Your memory has earned a passage to ${levels[level].name} and added 15 coins to your wallet.`,
-            "Enter next level",
-            makeBoard,
-          );
-        }
+        const handleNext = () => {
+          if (isFinalLevel) {
+            level = 0;
+            lives = 3;
+          } else {
+            level++;
+          }
+          makeBoard();
+        };
+
+        // Custom modal flow: play button text = "Watch Ad → Claim 15 Coins"
+        setModal(
+          isFinalLevel ? "🏆" : "✦",
+          isFinalLevel ? "Archive mastered" : "Archive cleared!",
+          isFinalLevel
+            ? "Watch a short sponsor break to claim your 15 Golden Coins, then play from the beginning."
+            : `Watch a short sponsor break to claim 15 Golden Coins, then enter ${nextLevelName}.`,
+          "🎬 Watch Ad → Claim 15 Coins",
+          () => {
+            // Ad runs BEFORE we advance the game board
+            showRewardedAd({
+              rewardLabel: "15 Coins",
+              onComplete: () => {
+                if (window.parent && window.parent !== window) {
+                  window.parent.postMessage(
+                    {
+                      source: "ascension-arcade",
+                      action: "AWARD_COINS",
+                      amount: 15,
+                      gameId: "matching",
+                    },
+                    "*",
+                  );
+                }
+                // Advance after reward is granted
+                handleNext();
+              },
+              onCancel: () => {
+                // User skipped the ad → no coins, but game still advances
+                console.log("[Arcade] Ad skipped — no reward.");
+                handleNext();
+              },
+            });
+          },
+        );
       }
       board.addEventListener("click", (event) => {
         const card = event.target.closest(".card");
@@ -711,5 +725,6 @@
         makeBoard,
       );
     </script>
+    <script src="ads.js"></script>
   </body>
 </html>

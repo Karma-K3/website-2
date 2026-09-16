@@ -604,6 +604,116 @@
         font-size: 0.85rem;
         color: var(--text-muted);
       }
+
+      /* --- Chapter list panel --- */
+      .chapter-toggle-btn {
+        margin-top: 14px;
+        background: transparent;
+        color: var(--dark-red);
+        border: 1px solid rgba(139, 0, 0, 0.25);
+        padding: 8px 18px;
+        font-weight: 600;
+        font-size: 13px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: var(--transition-smooth);
+      }
+      .chapter-toggle-btn:hover {
+        background: var(--light-rose);
+        border-color: rgba(139, 0, 0, 0.5);
+      }
+
+      .chapter-list-panel {
+        background: var(--pure-white);
+        border-bottom: 1px solid rgba(139, 0, 0, 0.08);
+        padding: 0 20px;
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.35s ease,
+          padding 0.35s ease;
+      }
+      .chapter-list-panel.open {
+        max-height: 600px;
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      .chapter-list-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--text-main);
+        border-bottom: 1px solid rgba(139, 0, 0, 0.08);
+        padding-bottom: 10px;
+      }
+      .chapter-list-hint {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      .chapter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 8px;
+      }
+
+      .chapter-tile {
+        padding: 10px 6px;
+        border-radius: 8px;
+        border: 1px solid rgba(139, 0, 0, 0.15);
+        background: var(--pure-white);
+        color: var(--text-main);
+        font-weight: 700;
+        font-size: 13px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+      .chapter-tile:hover {
+        background: var(--light-rose);
+        border-color: var(--dark-red);
+        transform: translateY(-1px);
+      }
+      .chapter-tile.current {
+        background: var(--dark-red);
+        color: var(--pure-white);
+        border-color: var(--dark-red);
+        box-shadow: 0 3px 10px rgba(139, 0, 0, 0.25);
+      }
+      .chapter-tile.locked {
+        color: var(--text-muted);
+        border-style: dashed;
+        background: #fafafa;
+      }
+      .chapter-tile.locked .chapter-tile-lock {
+        font-size: 10px;
+        opacity: 0.85;
+      }
+      .chapter-tile .chapter-tile-num {
+        font-size: 13px;
+      }
+      .chapter-tile .chapter-tile-title {
+        font-size: 9px;
+        font-weight: 500;
+        color: var(--text-muted);
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .chapter-tile.current .chapter-tile-title {
+        color: rgba(255, 255, 255, 0.85);
+      }
     </style>
   </head>
   <body>
@@ -681,6 +791,24 @@
             <p class="viewer-subtitle" id="current-chapter-title">
               Loading Episode...
             </p>
+            <button
+              class="chapter-toggle-btn"
+              id="chapter-toggle-btn"
+              onclick="toggleChapterList()"
+            >
+              📖 All Chapters ▼
+            </button>
+          </div>
+
+          <!-- Chapter list panel (collapsible) -->
+          <div class="chapter-list-panel" id="chapter-list-panel">
+            <div class="chapter-list-head">
+              <span>Chapters</span>
+              <span class="chapter-list-hint">Free: first 5 · Locked: 🔒</span>
+            </div>
+            <div class="chapter-grid" id="chapter-grid">
+              <!-- Populated by JS -->
+            </div>
           </div>
 
           <!-- The Core Scroll Track Engine -->
@@ -695,13 +823,22 @@
             >
               ← Back Home
             </button>
-            <button
-              class="cta-btn"
-              id="next-ep-btn"
-              onclick="loadNextEpisode()"
-            >
-              Next Episode ▶
-            </button>
+            <div style="display: flex; gap: 10px">
+              <button
+                class="cta-btn cta-btn-secondary"
+                id="prev-ep-btn"
+                onclick="loadPrevEpisode()"
+              >
+                ◀ Previous
+              </button>
+              <button
+                class="cta-btn"
+                id="next-ep-btn"
+                onclick="loadNextEpisode()"
+              >
+                Next ▶
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1129,6 +1266,8 @@
         document.getElementById("current-chapter-title").innerText =
           `Episode ${chapter.number}: ${chapter.title}`;
 
+        renderChapterList(comic, chapter.number);
+
         // Decide access
         const free = isChapterFree(comic.slug, chapter.number);
         const track = document.getElementById("comic-image-track");
@@ -1143,8 +1282,17 @@
 
         // Wire navigation buttons
         const nextBtn = document.getElementById("next-ep-btn");
+        const prevBtn = document.getElementById("prev-ep-btn");
+
         nextBtn.disabled = false;
         nextBtn.onclick = () => gotoChapter(comic.slug, chapter.number + 1);
+
+        if (prevBtn) {
+          const minCh = Math.min(...comic.chapters.map((c) => c.number));
+          prevBtn.disabled = chapter.number <= minCh;
+          prevBtn.style.opacity = prevBtn.disabled ? 0.4 : 1;
+          prevBtn.style.cursor = prevBtn.disabled ? "not-allowed" : "pointer";
+        }
 
         switchPage("viewer");
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1214,6 +1362,70 @@
           switchPage("game");
       }
 
+      /* ==============================================================
+   CHAPTER LIST UI
+   ============================================================== */
+
+      let chapterListOpen = false;
+
+      function toggleChapterList() {
+        chapterListOpen = !chapterListOpen;
+        const panel = document.getElementById("chapter-list-panel");
+        const btn = document.getElementById("chapter-toggle-btn");
+        if (!panel || !btn) return;
+
+        panel.classList.toggle("open", chapterListOpen);
+        btn.textContent = chapterListOpen
+          ? "📖 Hide Chapters ▲"
+          : "📖 All Chapters ▼";
+      }
+
+      function renderChapterList(comic, currentNum) {
+        const grid = document.getElementById("chapter-grid");
+        if (!grid) return;
+        grid.innerHTML = "";
+
+        // Sort by chapter number ascending
+        const chapters = [...comic.chapters].sort(
+          (a, b) => a.number - b.number,
+        );
+
+        chapters.forEach((ch) => {
+          const free = isChapterFree(comic.slug, ch.number);
+          const isCurrent = ch.number === currentNum;
+
+          const tile = document.createElement("button");
+          tile.type = "button";
+          tile.className = "chapter-tile";
+          if (isCurrent) tile.classList.add("current");
+          if (!free) tile.classList.add("locked");
+
+          tile.innerHTML = `
+      <span class="chapter-tile-num">
+        ${free ? "Ch. " + ch.number : "🔒 " + ch.number}
+      </span>
+      <span class="chapter-tile-title">${ch.title}</span>
+    `;
+
+          tile.title = free
+            ? `Chapter ${ch.number}: ${ch.title}`
+            : `Chapter ${ch.number} — locked (unlock for ${UNLOCK_COST} coins)`;
+
+          tile.onclick = () => {
+            // If clicking the current chapter, just close the list
+            if (isCurrent) {
+              toggleChapterList();
+              return;
+            }
+            openComic(comic.slug, ch.number);
+            // Auto-close the chapter panel when navigating
+            if (chapterListOpen) toggleChapterList();
+          };
+
+          grid.appendChild(tile);
+        });
+      }
+
       /* Override isChapterFree to also honor unlocked chapters */
       const _originalIsFree = isChapterFree;
       window.isChapterFree = function (slug, number) {
@@ -1243,6 +1455,18 @@
         if (currentComicSlug) {
           gotoChapter(currentComicSlug, currentChapterNumber + 1);
         }
+      }
+
+      function loadPrevEpisode() {
+        if (!currentComicSlug) return;
+        const comic = getComic(currentComicSlug);
+        if (!comic) return;
+        const min = Math.min(...comic.chapters.map((c) => c.number));
+        if (currentChapterNumber <= min) {
+          alert("This is the first chapter.");
+          return;
+        }
+        gotoChapter(currentComicSlug, currentChapterNumber - 1);
       }
 
       /* ==============================================================

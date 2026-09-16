@@ -642,6 +642,7 @@
         }
       }
     </style>
+    <script src="ads.js"></script>
   </head>
   <body>
     <div id="stage">
@@ -1299,18 +1300,29 @@
             document
               .getElementById("continue-btn")
               .addEventListener("click", () => {
-                // 🪙 REWARD BRIDGE — unified contract (handled by index 2.html)
-                if (window.parent && window.parent !== window) {
-                  window.parent.postMessage(
-                    {
-                      source: "ascension-arcade",
-                      action: "AWARD_COINS",
-                      amount: 15,
-                      gameId: "clicker",
-                    },
-                    "*",
-                  );
-                }
+                // 🪙 Show rewarded ad before granting coins
+                showRewardedAd({
+                  rewardLabel: "15 Coins",
+                  onComplete: () => {
+                    // Ad watched successfully → dispatch reward to parent Vault
+                    if (window.parent && window.parent !== window) {
+                      window.parent.postMessage(
+                        {
+                          source: "ascension-arcade",
+                          action: "AWARD_COINS",
+                          amount: 15,
+                          gameId: "clicker",
+                        },
+                        "*",
+                      );
+                    }
+                  },
+                  onCancel: () => {
+                    console.log("[Arcade] Ad skipped — no reward.");
+                  },
+                });
+
+                // Advance to next realm regardless of ad outcome
                 cfg = nextCfg;
                 startLevel();
               });
